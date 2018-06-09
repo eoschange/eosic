@@ -1,6 +1,9 @@
 import * as path from "path";
 import * as fs from "fs-extra";
 import * as globby from "globby";
+import * as dirsum from "dirsum";
+import { DockerEOS } from "./docker-wrapper";
+import * as signale from "signale";
 
 export interface EosProjectConfig {
   name: string;
@@ -34,7 +37,12 @@ export class EosContract {
 
   async digest(): Promise<string> {
     return new Promise<string>((resolve, reject) => {
-      resolve("md5goeshereinafuture");
+      dirsum.digest(this.root, "md5", (err: any, hashes: any) => {
+        if (err) {
+          reject(err);
+        }
+        resolve(<string>hashes.hash);
+      });
     });
   }
 }
@@ -45,6 +53,7 @@ export default class EosProject {
   root: string;
   configuration: EosProjectConfig;
   private contracts: EosContractsCollection = {};
+  session: DockerEOS;
 
   constructor(root: string, config: EosProjectConfig) {
     if (!path.isAbsolute(root)) {
@@ -56,6 +65,7 @@ export default class EosProject {
   }
 
   static async load(root: string): Promise<EosProject> {
+    console.log(root);
     const configPath = path.resolve(path.join(root, "eosic.json"));
     const configContent = await fs.readFile(configPath, "utf8");
     const config = <EosProjectConfig>JSON.parse(configContent);
@@ -115,5 +125,44 @@ export default class EosProject {
   async save() {
     const json = JSON.stringify(this.configuration, null, 2);
     await fs.writeFile(this.configPath, json);
+  }
+
+  async start(): Promise<any> {
+    if (this.session) {
+      throw new Error("Session already started");
+    }
+
+    this.session = await DockerEOS.create();
+    return this.session.start();
+  }
+
+  async stop(): Promise<any> {
+    if (!this.session) {
+      throw new Error("Session have not created yet");
+    }
+
+    await this.session.stop();
+    await this.session.remove();
+  }
+
+  async compile(contractName: string): Promise<void> {
+    const contract = this.getContract(contractName);
+    const hash = await contract.digest();
+
+    if (!this.session) {
+      throw new Error("Session have not created yet");
+    }
+
+    // compile if it needed
+    if (this.configuration.contracts[contractName].checksum !== hash) {
+      signale.info(`Starting compilation of ${contractName}`);
+      const output = await this.session.compile(contractName);
+      output.split("\n").forEach(line => signale.debug(line));
+      // output.forEach((line) => line.split('\n').forEach(require('signale').info))
+      const compiledHash = await contract.digest();
+      this.configuration.contracts[contractName].checksum = compiledHash;
+    } else {
+      signale.info(`${contractName} is up to date`);
+    }
   }
 }

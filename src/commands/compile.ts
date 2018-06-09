@@ -1,25 +1,38 @@
-import {Command, flags} from '@oclif/command'
+import BaseCommand from "./internal/base-command";
+import EosProject from "../lib/eos-project";
 
-export default class Compile extends Command {
-  static description = 'describe the command here'
+const MAX_CONSTRACTS_COUNT = 15;
 
-  static flags = {
-    help: flags.help({char: 'h'}),
-    // flag with a value (-n, --name=VALUE)
-    name: flags.string({char: 'n', description: 'name to print'}),
-    // flag with no value (-f, --force)
-    force: flags.boolean({char: 'f'}),
-  }
+function makeContractPaths(count: number) {
+  return Array(count)
+    .fill(0)
+    .map((_, index) => ({
+      required: false,
+      hidden: true,
+      name: index.toString()
+    }));
+}
 
-  static args = [{name: 'file'}]
+export default class Compile extends BaseCommand {
+  static args = makeContractPaths(MAX_CONSTRACTS_COUNT);
+  static flags = BaseCommand.flags;
 
   async run() {
-    const {args, flags} = this.parse(Compile)
+    const { args, flags } = this;
+    const contracts = Array(MAX_CONSTRACTS_COUNT)
+      .fill(0)
+      .map((_, index) => args[index])
+      .filter(contract => contract != undefined);
 
-    const name = flags.name || 'world'
-    this.log(`hello ${name} from /Users/aler/crypto/eos/hackathon/eosic/src/commands/compile.ts`)
-    if (args.file && flags.force) {
-      this.log(`you input --force and --file: ${args.file}`)
+    if (!contracts.length) {
+      throw new Error("Define at least one contract to compile");
     }
+
+    const project = await EosProject.load(flags.cwd);
+    await project.start();
+    const tasks = contracts.map(contract => project.compile(contract));
+    await Promise.all(tasks);
+    await project.stop();
+    await project.save();
   }
 }
