@@ -3,6 +3,7 @@ import BaseCommand from "./internal/base-command";
 import * as Mocha from "mocha";
 import * as globby from "globby";
 import * as path from "path";
+import * as axios from "axios";
 import EosProject from "../lib/eos-project";
 
 async function sleep(sec: number) {
@@ -13,21 +14,35 @@ export default class Test extends BaseCommand {
   static flags = BaseCommand.flags;
 
   async run() {
-    const { args, flags } = this;
-
-    const project = await EosProject.load(flags.cwd);
+    const project = await EosProject.load(this.flags.cwd);
 
     await project.start();
+
     const mocha = new Mocha();
     const tests = await globby("test/**/*.test.js", {
-      cwd: flags.cwd
+      cwd: this.flags.cwd
     });
 
     tests.forEach(test => {
-      mocha.addFile(path.resolve(flags.cwd, test));
+      mocha.addFile(path.resolve(this.flags.cwd, test));
     });
 
-    await sleep(1);
+    let success = false;
+    let tries = 0;
+    while (!success && tries < 10) {
+      tries++;
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      try {
+        const responce = await axios.get(
+          "http://127.0.0.1:8888/v1/chain/get_info"
+        );
+        success = true;
+      } catch (e) {
+        console.error("waiting for a node");
+      }
+    }
+
+    await sleep(0.6);
     mocha.timeout(20000);
 
     try {

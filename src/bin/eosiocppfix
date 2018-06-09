@@ -52,7 +52,7 @@ function build_contract {
         )
 
     done
-
+    
     ($PRINT_CMDS; /opt/wasm/bin/llvm-link -only-needed -o $workdir/linked.bc $workdir/built/* \
                                    ${EOSIO_INSTALL_DIR}/usr/share/eosio/contractsdk/lib/libc.bc \
                                    ${EOSIO_INSTALL_DIR}/usr/share/eosio/contractsdk/lib/libc++.bc \
@@ -60,6 +60,7 @@ function build_contract {
     )
     ($PRINT_CMDS; /opt/wasm/bin/llc -thread-model=single --asm-verbose=false -o $workdir/assembly.s $workdir/linked.bc)
     ($PRINT_CMDS; ${EOSIO_INSTALL_DIR}/bin/eosio-s2wasm -o $outname -s 16384 $workdir/assembly.s)
+    ($PRINT_CMDS; ${EOSIO_INSTALL_DIR}/bin/eosio-wast2wasm $outname ${outname%.*}.wasm -n)
 
 #    echo rm -rf $workdir
     rm -rf $workdir

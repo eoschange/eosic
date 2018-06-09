@@ -1,5 +1,6 @@
 import { PassThrough } from "stream";
 import * as dockerode from "dockerode";
+import * as execa from "execa";
 import * as path from "path";
 import * as fs from "fs-extra";
 import * as slug from "slug";
@@ -215,6 +216,7 @@ export class DockerEOS {
     this._container = await this._docker.createContainer({
       name: `eosic-${(Math.random() * 0xffffff) >> 0}`,
       Image: this._imageInfo.RepoTags[0],
+      // Cmd: ["/bin/bash"],
       Cmd: [
         "/opt/eosio/bin/nodeosd.sh",
         "--data-dir",
@@ -222,8 +224,8 @@ export class DockerEOS {
         "-e"
       ],
       ExposedPorts: {
-        "8888/tcp": {},
-        "9876/tcp": {}
+        "8888": {},
+        "9876": {}
       },
       Hostname: "eosic",
       Labels: {
@@ -232,12 +234,12 @@ export class DockerEOS {
       },
       HostConfig: {
         PortBindings: {
-          "8888/tcp": [
+          "8888": [
             {
               HostPort: "8888"
             }
           ],
-          "9876/tcp": [
+          "9876": [
             {
               HostPort: "9876"
             }
@@ -245,7 +247,6 @@ export class DockerEOS {
         },
         Binds: [
           `${process.cwd()}/config.ini:/opt/eosio/bin/data-dir/config.ini`,
-          `${process.cwd()}/playground:/playground`,
           `${process.cwd()}/contracts:/contracts`,
           `${path.resolve(__dirname, "..", "bin")}/.bashrc:/.bashrc`,
           `${path.resolve(__dirname, "..", "bin")}/eosiocppfix:/eosiocppfix`,
@@ -260,10 +261,38 @@ export class DockerEOS {
       throw new Error("Container not found!");
     }
 
-    signale.debug("Container started");
     await this._container.start();
+
+    const logStream = new PassThrough();
+    logStream.on("data", function(chunk: any) {
+      console.log(chunk.toString("utf8"));
+    });
+
+    this._container.logs(
+      {
+        follow: true,
+        stdout: true,
+        stderr: true
+      },
+      (err, stream: any) => {
+        if (err || !this._container) {
+          return console.error(err.message);
+        }
+
+        this._container.modem.demuxStream(stream, logStream, logStream);
+        stream.on("end", function() {
+          logStream.end("!stop!");
+        });
+
+        setTimeout(function() {
+          stream.destroy();
+        }, 2000);
+      }
+    );
+
     await this.exec("bash", "-c", "chmod +x /compile");
     await this.exec("bash", "-c", "chmod +x /eosiocppfix");
+    signale.debug("Container started");
   }
 
   stop(): Promise<any> {
@@ -281,7 +310,9 @@ export class DockerEOS {
     }
 
     signale.debug("Container destroyed");
-    return this._container.remove();
+    return this._container.remove({
+      v: true
+    });
   }
 
   async exec(...args: string[]): Promise<string> {
@@ -292,8 +323,8 @@ export class DockerEOS {
       AttachStdout: true,
       AttachStderr: true
     };
-    // if (this._container && (await this._container.inspect()).State.Running) {
-    if (this._container) {
+    if (this._container && (await this._container.inspect()).State.Running) {
+      // if (this._container) {
       return new Promise<string>((resolve, reject) => {
         let output: string = "";
         this._container &&
