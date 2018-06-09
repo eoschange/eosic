@@ -1,25 +1,27 @@
-import {Command, flags} from '@oclif/command'
+import * as slug from "slug";
+import { Command, flags } from "@oclif/command";
+import GeneratorCommand from "./internal/generator-command";
+import {
+  ContractGenerator,
+  ContractGeneratorConfig
+} from "../generators/contract-generator";
 
-export default class Contract extends Command {
-  static description = 'describe the command here'
+export default class Contract extends GeneratorCommand {
+  static args = [
+    {
+      name: "name",
+      description: "Name of generated contract",
+      required: true,
+      parse: (input: any) => slug(input)
+    }
+  ];
 
   static flags = {
-    help: flags.help({char: 'h'}),
-    // flag with a value (-n, --name=VALUE)
-    name: flags.string({char: 'n', description: 'name to print'}),
-    // flag with no value (-f, --force)
-    force: flags.boolean({char: 'f'}),
-  }
+    ...GeneratorCommand.flags,
+    description: flags.string({ char: "d" }),
+    withBuiltin: flags.boolean({ char: "b" })
+  };
 
-  static args = [{name: 'file'}]
-
-  async run() {
-    const {args, flags} = this.parse(Contract)
-
-    const name = flags.name || 'world'
-    this.log(`hello ${name} from /Users/aler/crypto/eos/hackathon/eosic/src/commands/contract.ts`)
-    if (args.file && flags.force) {
-      this.log(`you input --force and --file: ${args.file}`)
-    }
-  }
+  type: ContractGenerator = new ContractGenerator();
+  static description = "create new contract";
 }
