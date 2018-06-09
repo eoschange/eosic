@@ -1,6 +1,7 @@
 import * as path from "path";
 import * as globby from "globby";
 import * as fs from "fs-extra";
+import * as hb from "handlebars";
 
 export interface GeneratorOptions {
   quiet: boolean;

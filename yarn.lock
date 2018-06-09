@@ -220,6 +220,10 @@
   dependencies:
     "@types/glob" "*"
 
+"@types/handlebars@^4.0.38":
+  version "4.0.38"
+  resolved "https://registry.yarnpkg.com/@types/handlebars/-/handlebars-4.0.38.tgz#d0ebec1934c0bba97f99a0cb703fe2ef8c4a662f"
+
 "@types/inquirer@^0.0.41":
   version "0.0.41"
   resolved "https://registry.yarnpkg.com/@types/inquirer/-/inquirer-0.0.41.tgz#0c33027dcd0b0dde234e22afa454f2c75d8b30d2"
