@@ -29,7 +29,6 @@ export default class Compile extends BaseCommand {
     }
 
     const project = await EosProject.load(flags.cwd);
-    await project.start();
     const tasks = contracts.map(contract => project.compile(contract));
     await Promise.all(tasks);
     await project.stop();

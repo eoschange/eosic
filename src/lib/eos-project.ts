@@ -127,38 +127,32 @@ export default class EosProject {
     await fs.writeFile(this.configPath, json);
   }
 
-  async start(): Promise<any> {
-    if (this.session) {
-      throw new Error("Session already started");
+  async start(log: boolean = true): Promise<any> {
+    if (!this.session) {
+      this.session = await DockerEOS.create();
+      return this.session.start(log);
     }
-
-    this.session = await DockerEOS.create();
-    return this.session.start();
   }
 
   async stop(): Promise<any> {
-    if (!this.session) {
-      throw new Error("Session have not created yet");
+    if (this.session) {
+      await this.session.stop();
+      await this.session.remove();
     }
-
-    await this.session.stop();
-    await this.session.remove();
   }
 
   async compile(contractName: string): Promise<void> {
     const contract = this.getContract(contractName);
     const hash = await contract.digest();
 
-    if (!this.session) {
-      throw new Error("Session have not created yet");
-    }
-
     // compile if it needed
     if (this.configuration.contracts[contractName].checksum !== hash) {
+      if (!this.session) {
+        await this.start(false);
+      }
       signale.info(`Starting compilation of ${contractName}`);
       const output = await this.session.compile(contractName);
       output.split("\n").forEach(line => signale.debug(line));
-      // output.forEach((line) => line.split('\n').forEach(require('signale').info))
       const compiledHash = await contract.digest();
       this.configuration.contracts[contractName].checksum = compiledHash;
     } else {

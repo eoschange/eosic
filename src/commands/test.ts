@@ -42,7 +42,6 @@ export default class Test extends BaseCommand {
       }
     }
 
-    await sleep(0.6);
     mocha.timeout(20000);
 
     try {

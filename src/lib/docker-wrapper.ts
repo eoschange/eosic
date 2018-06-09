@@ -6,6 +6,7 @@ import * as fs from "fs-extra";
 import * as slug from "slug";
 import * as inquirer from "inquirer";
 import * as signale from "signale";
+import * as chalk from "chalk";
 
 export const DEFAULT_IMAGE_REPO = "eosic/environment";
 export const DEFAULT_IMAGE_TAG = "latest";
@@ -170,7 +171,7 @@ export class DockerEOS {
       const log = new PassThrough();
       let header: any = null;
       log.on("data", (chunk: any) => {
-        console.log(chunk.toString("utf8").trim());
+        console.log(chalk.white(chunk.toString("utf8").trim()));
       });
 
       stream.on("data", (chunk: any) => {
@@ -221,7 +222,8 @@ export class DockerEOS {
         "/opt/eosio/bin/nodeosd.sh",
         "--data-dir",
         "/opt/eosio/bin/data-dir",
-        "-e"
+        "-e",
+        "--contracts-console"
       ],
       ExposedPorts: {
         "8888": {},
@@ -246,7 +248,7 @@ export class DockerEOS {
           ]
         },
         Binds: [
-          `${process.cwd()}/config.ini:/opt/eosio/bin/data-dir/config.ini`,
+          // `${process.cwd()}/config.ini:/opt/eosio/bin/data-dir/config.ini`,
           `${process.cwd()}/contracts:/contracts`,
           `${path.resolve(__dirname, "..", "bin")}/.bashrc:/.bashrc`,
           `${path.resolve(__dirname, "..", "bin")}/eosiocppfix:/eosiocppfix`,
@@ -256,39 +258,37 @@ export class DockerEOS {
     });
   }
 
-  async start(): Promise<any> {
+  async start(log: boolean): Promise<any> {
     if (!this._container) {
       throw new Error("Container not found!");
     }
 
     await this._container.start();
 
-    const logStream = new PassThrough();
-    logStream.on("data", function(chunk: any) {
-      console.log(chunk.toString("utf8"));
-    });
+    if (log) {
+      const logStream = new PassThrough();
+      logStream.on("data", function(chunk: any) {
+        console.log(chalk.white(chunk.toString("utf8").slice(0, -1)));
+      });
 
-    this._container.logs(
-      {
-        follow: true,
-        stdout: true,
-        stderr: true
-      },
-      (err, stream: any) => {
-        if (err || !this._container) {
-          return console.error(err.message);
+      this._container.logs(
+        {
+          follow: true,
+          stdout: true,
+          stderr: true
+        },
+        (err, stream: any) => {
+          if (err || !this._container) {
+            return console.error(err.message);
+          }
+
+          this._container.modem.demuxStream(stream, logStream, logStream);
+          stream.on("end", function() {
+            logStream.end("!stop!");
+          });
         }
-
-        this._container.modem.demuxStream(stream, logStream, logStream);
-        stream.on("end", function() {
-          logStream.end("!stop!");
-        });
-
-        setTimeout(function() {
-          stream.destroy();
-        }, 2000);
-      }
-    );
+      );
+    }
 
     await this.exec("bash", "-c", "chmod +x /compile");
     await this.exec("bash", "-c", "chmod +x /eosiocppfix");
