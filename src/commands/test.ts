@@ -27,11 +27,18 @@ export default class Test extends BaseCommand {
       mocha.addFile(path.resolve(flags.cwd, test));
     });
 
-    await sleep(0.6);
+    await sleep(1);
     mocha.timeout(20000);
-    mocha.run(async failures => {
+
+    try {
+      mocha.run(async failures => {
+        await project.stop();
+        process.exitCode = failures ? -1 : 0; // exit with non-zero status if there were failures
+      });
+    } catch (e) {
+      require("signale").fatal(e);
       await project.stop();
-      process.exitCode = failures ? -1 : 0; // exit with non-zero status if there were failures
-    });
+      process.exitCode = -1;
+    }
   }
 }
