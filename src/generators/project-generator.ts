@@ -1,5 +1,7 @@
 import * as path from "path";
 import Generator from "./generator";
+import * as inquirer from "inquirer";
+import * as slug from "slug";
 
 export interface ProjectGeneratorConfig {
   name: string;
@@ -26,6 +28,24 @@ export class ProjectGenerator extends Generator<ProjectGeneratorConfig> {
   }
 
   async prompt(): Promise<ProjectGeneratorConfig> {
-    throw new Error("Method not implemented.");
+    return inquirer.prompt<ProjectGeneratorConfig>([
+      {
+        name: "name",
+        message: "Project name",
+        default: this.options.name,
+        transformer: (input: any) => slug(input)
+      },
+      {
+        name: "description",
+        message: "Project description",
+        default: this.options.description
+      },
+      {
+        type: "list",
+        name: "withBuiltin",
+        message: "Add default EOS contracts to project?",
+        choices: [{ name: "yes", value: true }, { name: "no", value: false }]
+      }
+    ]);
   }
 }

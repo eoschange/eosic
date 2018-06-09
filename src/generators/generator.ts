@@ -1,5 +1,6 @@
 import * as path from "path";
 import * as globby from "globby";
+import * as fs from "fs-extra";
 
 export interface GeneratorOptions {
   quiet: boolean;
@@ -15,6 +16,7 @@ export default abstract class Generator<T extends object>
   implements GeneratorInterface {
   options: GeneratorOptions & T;
   abstract readonly defaultConfig: T;
+  readonly templateRoot: string = path.resolve(__dirname, "../templates");
 
   async generate(opts: GeneratorOptions & T) {
     this.options = opts;
