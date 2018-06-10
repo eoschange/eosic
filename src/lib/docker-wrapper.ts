@@ -248,7 +248,7 @@ export class DockerEOS {
           ]
         },
         Binds: [
-          // `${process.cwd()}/config.ini:/opt/eosio/bin/data-dir/config.ini`,
+          `${process.cwd()}/config.ini:/opt/eosio/bin/data-dir/config.ini`,
           `${process.cwd()}/contracts:/contracts`,
           `${path.resolve(__dirname, "..", "bin")}/.bashrc:/.bashrc`,
           `${path.resolve(__dirname, "..", "bin")}/eosiocppfix:/eosiocppfix`,
