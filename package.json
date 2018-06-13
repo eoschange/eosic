@@ -30,7 +30,8 @@
     "inquirer": "^6.0.0",
     "signale": "^1.1.0",
     "slug": "^0.9.1",
-    "tslib": "^1"
+    "tslib": "^1",
+    "typescript": "2.8.3"
   },
   "devDependencies": {
     "@oclif/dev-cli": "^1",
@@ -43,8 +44,7 @@
     "mocha": "^5",
     "nyc": "^12",
     "ts-node": "^6",
-    "tslint": "^5",
-    "typescript": "2.7.2"
+    "tslint": "^5"
   },
   "engines": {
     "node": ">=8.0.0"

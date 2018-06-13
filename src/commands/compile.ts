@@ -1,3 +1,4 @@
+import { Command, flags } from "@oclif/command";
 import BaseCommand from "./internal/base-command";
 import EosProject from "../lib/eos-project";
 

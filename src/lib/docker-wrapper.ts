@@ -6,7 +6,7 @@ import * as fs from "fs-extra";
 import * as slug from "slug";
 import * as inquirer from "inquirer";
 import * as signale from "signale";
-import * as chalk from "chalk";
+import chalk from "chalk";
 
 export const DEFAULT_IMAGE_REPO = "eosic/environment";
 export const DEFAULT_IMAGE_TAG = "latest";

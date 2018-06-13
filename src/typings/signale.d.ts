@@ -23,4 +23,7 @@ declare module "signale" {
     watch(...input: SignaleInput[]): void;
     log(...input: SignaleInput[]): void;
   }
+
+  var signale: Signale;
+  export = signale;
 }

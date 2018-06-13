@@ -1,10 +1,10 @@
 import { Command, flags } from "@oclif/command";
 import BaseCommand from "./internal/base-command";
 import EosProject from "../lib/eos-project";
-import * as death from "death";
 import * as globby from "globby";
-import * as axios from "axios";
+import axios from "axios";
 import * as path from "path";
+import death = require("death");
 
 async function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));

@@ -3,7 +3,7 @@ import BaseCommand from "./internal/base-command";
 import * as Mocha from "mocha";
 import * as globby from "globby";
 import * as path from "path";
-import * as axios from "axios";
+import axios from "axios";
 import EosProject from "../lib/eos-project";
 
 async function sleep(sec: number) {

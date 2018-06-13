@@ -53,7 +53,7 @@ export default class EosProject {
   root: string;
   configuration: EosProjectConfig;
   private contracts: EosContractsCollection = {};
-  session: DockerEOS;
+  session!: DockerEOS;
 
   constructor(root: string, config: EosProjectConfig) {
     if (!path.isAbsolute(root)) {
