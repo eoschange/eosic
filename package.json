@@ -1,12 +1,12 @@
 {
-  "name": "eosic",
+  "name": "@eoschange/eosic",
   "description": "Unofficial toolset to operate with EOSIO platform",
   "version": "0.0.01",
   "author": "Aler Denisov @alerdenisov",
   "bin": {
     "eosic": "./bin/run"
   },
-  "bugs": "https://github.com/alerdenisov/eosic/issues",
+  "bugs": "https://github.com/eos-change/eosic/issues",
   "dependencies": {
     "@oclif/command": "^1",
     "@oclif/config": "^1",
@@ -54,7 +54,7 @@
     "/lib",
     "/oclif.manifest.json"
   ],
-  "homepage": "https://github.com/alerdenisov/eosic",
+  "homepage": "https://github.com/eos-change/eosic",
   "keywords": [
     "oclif"
   ],
@@ -67,7 +67,7 @@
       "@oclif/plugin-help"
     ]
   },
-  "repository": "alerdenisov/eosic",
+  "repository": "eos-change/eosic",
   "scripts": {
     "postpack": "rm -f oclif.manifest.json",
     "posttest": "tsc -p test --noEmit && tslint -p test -t stylish",
